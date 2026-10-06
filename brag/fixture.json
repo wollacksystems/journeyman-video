@@ -1,0 +1,138 @@
+{
+  "schema": "brag-endpoint-fixture",
+  "schemaVersion": 1,
+  "provenance": {
+    "endpoint": "https://br-rough-heart-b5xnq94n-agent.compute.c-7.us-east-2.aws.neon.tech/",
+    "capturedAt": "2026-09-25T15:42:48.787Z",
+    "request": "POST {\"messages\":[{\"role\":\"user\",\"content\":\"...\"}]}",
+    "transport": "identical to the deployed agent function's documented contract",
+    "note": "Verbatim response bodies live in brag/raw/. This file is derived from them; do not hand-edit."
+  },
+  "cases": [
+    {
+      "id": "abstention",
+      "role": "out-of-corpus",
+      "question": "How do I recalibrate the spindle laser interferometer?",
+      "httpStatus": 200,
+      "elapsedMs": 3846,
+      "answer": "The evidence provided does not contain information about recalibrating a spindle laser interferometer. \n\nThe available evidence discusses troubleshooting mechanical issues such as:\n- Clearing dust from sensors\n- Removing tools or chips from tool changer pockets\n- Wiping sensor faces and maintaining alignment\n- Addressing mechanical interference in indexing operations\n\nNone of these sources cover laser interferometer recalibration procedures. You would need different documentation or resources to answer your question.",
+      "citations": {
+        "verified": [],
+        "unverified": []
+      },
+      "evidence": [
+        {
+          "key": "E-corpus-2026-atc-jam-env-00-narration-44.08559543872252",
+          "scenario": "atc-jam-env-00",
+          "camera": "side-b",
+          "startClock": "00:44.1",
+          "endClock": "00:50.0",
+          "text": "One clean index on the reset. Mechanical interference it was — no parameter to chase.",
+          "hasCamera": true
+        },
+        {
+          "key": "E-corpus-2026-sensor-trip-env-00-narration-29.07907629502006",
+          "scenario": "sensor-trip-env-00",
+          "camera": "head",
+          "startClock": "00:29.1",
+          "endClock": "00:37.7",
+          "text": "A shop rag clears it. Wipe the face, keep the bracket square, don't knock the alignment.",
+          "hasCamera": true
+        },
+        {
+          "key": "E-corpus-2026-atc-jam-env-00-narration-24.356484511168674",
+          "scenario": "atc-jam-env-00",
+          "camera": "head",
+          "startClock": "00:24.4",
+          "endClock": "00:30.6",
+          "text": "Check the active pocket first: a loose tool or chip wedged there will stop the index cold.",
+          "hasCamera": true
+        },
+        {
+          "key": "E-corpus-2026-sensor-trip-env-00-narration-22.867197164567187",
+          "scenario": "sensor-trip-env-00",
+          "camera": "head",
+          "startClock": "00:22.9",
+          "endClock": "00:29.1",
+          "text": "There it is. Dust bridged across the sensor, so the controller reads the axis at its limit.",
+          "hasCamera": true
+        }
+      ],
+      "stamp": {
+        "key": "E-corpus-2026-atc-jam-env-00-narration-44.08559543872252",
+        "camera": "SIDE-B",
+        "scenario": "atc-jam-env-00",
+        "startClock": "00:44.1",
+        "endClock": "00:50.0",
+        "durationSeconds": 5.9,
+        "text": "One clean index on the reset. Mechanical interference it was — no parameter to chase.",
+        "scrubPercent": 88,
+        "verified": false
+      }
+    },
+    {
+      "id": "answer",
+      "role": "in-corpus",
+      "question": "The tool changer stopped in the middle of a tool change. Should I keep resetting it?",
+      "httpStatus": 200,
+      "elapsedMs": 4052,
+      "answer": "No, you should not keep resetting it repeatedly.\n\nAccording to the evidence, when an ATC (automatic tool changer) stops between pockets mid-cycle, you should **stop cycling it and inspect first** rather than attempt repeated resets.\n\nSpecifically:\n\n**[E-corpus-2026-atc-jam-env-00-lesson]** (00:00.0-00:50.0) states: \"When an automatic tool changer stops between pockets, stop cycling it and inspect the active pocket, tool retention, chip buildup, release path, and carousel seating. Clear the obstruction only in a safe state, confirm the pocket is seated, reset the changer, and verify one complete tool change before returning to production.\"\n\n**[E-corpus-2026-atc-jam-env-00-narration-11]** (00:11.0-00:24.4) adds the warning: \"The carousel is between pockets, so do not force the spindle or cycle the changer repeatedly.\"\n\nThe proper sequence is: **stop → inspect → clear obstruction → reset once → verify** — not repeated reset attempts.",
+      "citations": {
+        "verified": [
+          "E-corpus-2026-atc-jam-env-00-lesson",
+          "E-corpus-2026-atc-jam-env-00-narration-11"
+        ],
+        "unverified": []
+      },
+      "evidence": [
+        {
+          "key": "E-corpus-2026-atc-jam-env-00-lesson",
+          "scenario": "atc-jam-env-00",
+          "camera": "unknown source",
+          "startClock": "00:00.0",
+          "endClock": "00:50.0",
+          "text": "An ATC index jam should be inspected mechanically before repeated resets: When an automatic tool changer stops between pockets, stop cycling it and inspect the active pocket, tool retention, chip buildup, release path, and carousel seating. Clear the obstruction only in a safe state, confirm the pocket is seated, reset the changer, and verify one complete tool change before returning to production.",
+          "hasCamera": false
+        },
+        {
+          "key": "E-corpus-2026-atc-jam-env-00-narration-2",
+          "scenario": "atc-jam-env-00",
+          "camera": "side-a",
+          "startClock": "00:02.0",
+          "endClock": "00:11.0",
+          "text": "Tool-change alarm mid-cycle. Working assumption: ATC index fault until proven otherwise.",
+          "hasCamera": true
+        },
+        {
+          "key": "E-corpus-2026-atc-jam-env-00-narration-24.356484511168674",
+          "scenario": "atc-jam-env-00",
+          "camera": "head",
+          "startClock": "00:24.4",
+          "endClock": "00:30.6",
+          "text": "Check the active pocket first: a loose tool or chip wedged there will stop the index cold.",
+          "hasCamera": true
+        },
+        {
+          "key": "E-corpus-2026-atc-jam-env-00-narration-11",
+          "scenario": "atc-jam-env-00",
+          "camera": "head",
+          "startClock": "00:11.0",
+          "endClock": "00:24.4",
+          "text": "The carousel is between pockets, so do not force the spindle or cycle the changer repeatedly.",
+          "hasCamera": true
+        }
+      ],
+      "stamp": {
+        "key": "E-corpus-2026-atc-jam-env-00-narration-11",
+        "camera": "HEAD",
+        "scenario": "atc-jam-env-00",
+        "startClock": "00:11.0",
+        "endClock": "00:24.4",
+        "durationSeconds": 13.4,
+        "text": "The carousel is between pockets, so do not force the spindle or cycle the changer repeatedly.",
+        "scrubPercent": 22,
+        "verified": true
+      }
+    }
+  ]
+}

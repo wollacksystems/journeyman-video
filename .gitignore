@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Astro generated types
+.astro/
+
+# Build output
+dist/
+
+# Render scratch: 816 frames, cut.html, sheet.html, the synthesized bed.
+# The deliverable mp4 is committed under assets/ instead.
+brag/out/
+
+# Environment / secrets
+.env
+.env.*
+
+# Editor / OS
+.DS_Store
+Thumbs.db

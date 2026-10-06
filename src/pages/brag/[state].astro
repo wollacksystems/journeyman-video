@@ -1,0 +1,321 @@
+---
+/**
+ * Brag capture surface — the demo scenes for the launch video
+ * (wollacksystems/journeyman#29, scenes 4 and 5), plus `cut`: the timeline the
+ * whole edit is shot from (see `src/components/BragTimeline.astro`).
+ *
+ * This is NOT a page of the site. `getStaticPaths` returns no paths unless
+ * `BRAG_CAPTURE=1` is set, so a normal `astro build` emits nothing here and the
+ * deploy cannot ship it. It exists to be rendered at 1920x1080 and captured:
+ *
+ *   BRAG_CAPTURE=1 npx astro build && npx astro preview   # then capture
+ *   /brag/ask   /brag/answer   /brag/abstention   /brag/cut
+ *
+ * Why a separate surface at all: the askable-library demo on /journeyman is
+ * deliberately scripted and offline from a fixed sample corpus, and DESIGN.md
+ * forbids letting that demo go online, generate its answers, or wear invented
+ * customers. The video needs the real endpoint's output, so it cannot record
+ * that demo. This surface renders the REAL captured bytes (brag/fixture.json,
+ * derived from the verbatim responses in brag/raw/) through the same console
+ * chrome, so the cut shows the product's actual answer and its actual
+ * abstention.
+ *
+ * Fidelity rules:
+ *   - The console markup and class names mirror `AskLibraryDemo.astro`, so the
+ *     real `global.css` styles apply. `npm --prefix` parity is checked by
+ *     `brag/check-surface.mjs`, which fails if the class lists drift.
+ *   - The frame is mounted on the Journeyman theme (`data-theme="journeyman"`),
+ *     the brand this video is for: warm iron ground, rust as the only
+ *     saturated hue.
+ *   - Fonts are loaded exactly as BaseLayout loads them. Without this the
+ *     serif/mono faces silently fall back and the frame stops matching the
+ *     product.
+ *   - `--brag-ui-zoom` scales the whole console up. At its shipped 820px the
+ *     0.72rem mono labels are ~11px, unreadable in a 1080p video; 1.6x renders
+ *     the same UI at a legible size. It is a camera choice, not a restyle.
+ *
+ * Nothing here is retyped: questions, answers, citation verdicts, source
+ * stamps, and the status line are all computed from the fixture.
+ */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import BragTimeline from '../../components/BragTimeline.astro';
+import fixture from '../../../brag/fixture.json';
+
+// The real stylesheet, read as text and inlined below rather than imported.
+//
+// Importing it works, but it also adds this page to the site's CSS module
+// graph, which renames the shared stylesheet chunk — every shipped page's HTML
+// then points at /_astro/global.<hash>.css instead of /_astro/schema.<hash>.css.
+// Same bytes, same content hash, different URL. A capture-only artifact should
+// leave the deployed site bit-for-bit alone, so the CSS is inlined instead.
+// Resolved from the project root, not `import.meta.url`: this module is bundled
+// into dist/.prerender/ at build time, so a path relative to `import.meta.url`
+// points into the build output and throws ENOENT. `astro build` always runs
+// with the project root as cwd (the npm script does).
+const globalCss = readFileSync(join(process.cwd(), 'src/styles/global.css'), 'utf8');
+
+
+// `ask`, `answer`, and `abstention` are the three console states the fixture is
+// replayed through. `cut` is the whole timeline (BragTimeline.astro), the one
+// the cut driver shoots frame by frame.
+type State = 'ask' | 'answer' | 'abstention' | 'cut';
+
+// Self-contained on purpose: Astro extracts this function into its own module
+// for prerendering, so it cannot close over a module-level binding (an outer
+// `const STATES` compiles to a `STATES is not defined` build failure).
+export function getStaticPaths() {
+  if (process.env.BRAG_CAPTURE !== '1') return [];
+  return ['ask', 'answer', 'abstention', 'cut'].map((state) => ({ params: { state } }));
+}
+
+const { state } = Astro.params as { state: State };
+
+const byId = new Map(fixture.cases.map((c) => [c.id, c]));
+const answer = byId.get('answer')!;
+const abstention = byId.get('abstention')!;
+
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/**
+ * Presentation-only render of the answer's markdown-ish text: the words are
+ * untouched, only `**bold**` and the `[E-...]` citation keys get markup. The
+ * endpoint returns markdown, and shipping the literal `**` in a launch video
+ * would read as a bug rather than as the product.
+ */
+const renderAnswer = (text: string) => {
+  const inline = escapeHtml(text)
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\[(E-[^\]]+)\]/g, '<span class="ask-cite">[$1]</span>');
+
+  // A block is usually a lead line followed by `- ` bullets, so walk the lines
+  // rather than assuming a bullet-only block. Zeros on the page are reset by
+  // `* { padding: 0 }` in global.css, so the list styling is ours to supply.
+  return inline
+    .split(/\n{2,}/)
+    .map((block) => {
+      const out: string[] = [];
+      let bullets: string[] = [];
+      const flush = () => {
+        if (bullets.length === 0) return;
+        out.push(`<ul>${bullets.map((item) => `<li>${item}</li>`).join('')}</ul>`);
+        bullets = [];
+      };
+      for (const line of block.split('\n')) {
+        const bullet = line.trim().match(/^-\s+(.*)$/);
+        if (bullet) bullets.push(bullet[1]);
+        else {
+          flush();
+          out.push(`<p>${line}</p>`);
+        }
+      }
+      flush();
+      return out.join('');
+    })
+    .join('');
+};
+
+const evidenceCount = (c: (typeof fixture.cases)[number]) => c.evidence.length;
+const citedCount = (c: (typeof fixture.cases)[number]) => c.citations.verified.length;
+
+// Console-state only: the cut renders no ask-bar.
+const status =
+  state === 'ask'
+    ? 'Searching the index…'
+    : state === 'answer'
+      ? `${evidenceCount(answer)} segments retrieved · ${citedCount(answer)} cited`
+      : state === 'abstention'
+        ? `${evidenceCount(abstention)} segments retrieved · none cited`
+        : null;
+
+const shown = state === 'answer' ? answer : state === 'abstention' ? abstention : null;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Brag capture — {state}</title>
+    <meta name="robots" content="noindex" />
+    <!-- Same faces BaseLayout loads; without them the frame falls back and
+         stops matching the product. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600&display=swap"
+    />
+
+    <!-- The site's real stylesheet, verbatim: the console only matches the
+         product because it is styled by the same rules. -->
+    <style is:inline set:html={globalCss}></style>
+
+    <!--
+      The frame CSS, inlined with `is:inline` on purpose.
+
+      A plain <style> here is never extracted, and importing a .css file from
+      this page adds nothing to the bundle either — the link below only exists
+      because BaseLayout imports global.css for the rest of the site. Both were
+      tried and both built the surface unstyled. `is:inline` emits these rules
+      verbatim, which is what a capture surface wants anyway.
+
+      Capture a 1920x1080 viewport: this is the video frame, exactly.
+    -->
+    <style is:inline>
+      .brag-frame {
+        width: 1920px;
+        height: 1080px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--color-bg-primary);
+        overflow: hidden;
+      }
+
+      /* A camera choice, not a restyle: the shipped console is 820px wide with
+         ~11px mono labels, unreadable at 1080p. Same UI, shot closer.
+
+         The zoom is a variable rather than a constant because it has to be
+         *fitted*: a real endpoint answer is long, and at a fixed 1.6x the slip
+         grew past 1080px and the frame clipped it top and bottom. The capture
+         runner measures the console, sets the largest zoom that fits, and
+         fails if anything still overflows. */
+      .brag-ui {
+        zoom: var(--brag-zoom, 1);
+        width: 820px;
+      }
+
+      /* The console carries `margin: 36px auto 0` for the page it lives on;
+         inside the frame the flex centering owns the position. */
+      .brag-ui .ask-console {
+        margin: 0;
+      }
+
+      /* Citation keys are the real `[E-...]` keys out of the answer text. */
+      .ask-cite {
+        font-family: var(--font-mono);
+        font-size: 0.86em;
+        color: var(--color-accent-blue);
+      }
+
+      /* An endpoint answer is several short paragraphs; the shipped slip
+         styles a single one, so give every paragraph the same measure. */
+      .ask-answer-a p,
+      .ask-miss-body p {
+        margin: 0 0 0.7em;
+      }
+
+      .ask-answer-a p:last-child,
+      .ask-miss-body p:last-child {
+        margin-bottom: 0;
+      }
+
+      .ask-answer-a strong {
+        font-weight: 600;
+      }
+
+      /* A caller-supplied answer can carry a bullet list; the page-level
+         `* { padding: 0 }` reset would otherwise leave it unmarked and flush
+         against the measure. */
+      .ask-answer-a ul,
+      .ask-miss-body ul {
+        margin: 0 0 0.7em;
+        padding-left: 1.2em;
+        list-style: disc;
+      }
+
+      .ask-answer-a ul:last-child,
+      .ask-miss-body ul:last-child {
+        margin-bottom: 0;
+      }
+
+      .ask-answer-a li,
+      .ask-miss-body li {
+        margin-bottom: 0.3em;
+      }
+    </style>
+  </head>
+  <body data-theme="journeyman">
+    {/* The other state: the cut's timeline, which brag/cut.mjs shoots one frame
+        at a time. See BragTimeline.astro for the clock. */}
+    {state === 'cut' && <BragTimeline />}
+
+    {/* The console states: the fixture, replayed through the shipped chrome. */}
+    {state !== 'cut' && (
+    <div class="brag-frame">
+      <div class="brag-ui">
+        <div class="ask-console">
+          <div class="ask-bar">
+            <span class="ask-bar-name">Journeyman</span>
+            <span class="ask-bar-scope">Machining corpus &middot; 3 scenarios</span>
+            <span class="ask-bar-status">{status}</span>
+          </div>
+
+          <form class="ask-form">
+            <label class="sr-only" for="ask-input">Ask the library a question</label>
+            <input
+              id="ask-input"
+              class="ask-input"
+              type="text"
+              name="q"
+              autocomplete="off"
+              placeholder="Ask the library&hellip;"
+              value={shown ? shown.question : answer.question}
+              readonly
+            />
+            <button class="btn btn-primary btn-small" type="button">Ask</button>
+          </form>
+
+          <div class="ask-chips" role="group" aria-label="Recorded questions">
+            {
+              fixture.cases.map((entry) => (
+                <span class="ask-chip">{entry.question}</span>
+              ))
+            }
+          </div>
+
+          <div class="ask-output">
+            {
+              state === 'answer' && answer.stamp && (
+                <article class="ask-answer">
+                  <p class="ask-answer-q">{answer.question}</p>
+                  <div class="ask-answer-a" set:html={renderAnswer(answer.answer)} />
+                  <div class="ask-source">
+                    <span class="ask-scrub" aria-hidden="true">
+                      <span
+                        class="ask-scrub-fill"
+                        style={`width: ${answer.stamp.scrubPercent}%`}
+                      />
+                    </span>
+                    <p class="ask-source-line">
+                      <span class="ask-source-seg">
+                        FROM {answer.stamp.camera} &middot; {answer.stamp.startClock}
+                      </span>
+                      <span class="ask-source-meta">
+                        {answer.stamp.durationSeconds}s &middot; {answer.stamp.scenario}{' '}
+                        &middot; {citedCount(answer)} citations verified
+                      </span>
+                    </p>
+                  </div>
+                </article>
+              )
+            }
+
+            {
+              state === 'abstention' && (
+                <div class="ask-miss">
+                  <p class="ask-miss-lead">
+                    &ldquo;{abstention.question}&rdquo;
+                  </p>
+                  <div class="ask-miss-body" set:html={renderAnswer(abstention.answer)} />
+                </div>
+              )
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+    )}
+  </body>
+</html>

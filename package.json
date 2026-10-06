@@ -1,0 +1,31 @@
+{
+  "name": "journeyman-video",
+  "version": "0.1.0",
+  "description": "Deterministic 34-second Journeyman launch film: gated capture surface, reading-budgeted timeline, and a frame-exact render pipeline.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "check": "astro check",
+    "check:surface": "node brag/check-surface.mjs",
+    "preview": "astro preview",
+    "astro": "astro",
+    "capture:fixture": "node brag/capture-fixture.mjs",
+    "capture": "node brag/capture.mjs",
+    "cut": "node brag/cut.mjs"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@types/node": "^26.6.4",
+    "astro": "^7.3.2",
+    "typescript": "^6.0.3"
+  },
+  "allowScripts": {
+    "esbuild": true
+  }
+}
