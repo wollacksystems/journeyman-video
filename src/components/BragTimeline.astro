@@ -1,0 +1,1061 @@
+---
+/**
+ * The cut's timeline, as DOM (wollacksystems/journeyman#29).
+ *
+ * It is thirty-four seconds long, and that number is not a preference. #29 asked
+ * for a twenty-second brag because the brag skill's format is twenty seconds;
+ * the reading budget below says this copy needs about thirty-two, and at twenty
+ * every line sat under its floor — the hook's thirteen words at 4.9 words a
+ * second, the pipeline's second caption at 0.39s of full opacity. The length is
+ * now derived from the copy instead of the copy being crushed into the length,
+ * and the gate in `brag/cut.mjs` is what keeps that honest.
+ *
+ * MOUNT IT ONLY FROM THE GATED CAPTURE ROUTE. `src/pages/brag/[state].astro`
+ * emits this only when `BRAG_CAPTURE=1`, so a normal `astro build` cannot ship
+ * it. Importing it from a real page would put a capture surface online.
+ *
+ * Six scenes, one master clock. Every position, opacity, and reveal in the
+ * frame is a pure function of a single `t` in seconds — there is no CSS
+ * animation, no transition, and no requestAnimationFrame in the rendering
+ * path. `window.__brag.seek(t)` paints the exact frame that `t` describes, so
+ * the same t yields the same pixels on a clean checkout, and `brag/cut.mjs`
+ * shoots the video by walking t at a fixed rate. Wall-clock animation would
+ * make the cut unreproducible, which #29 forbids.
+ *
+ * Readable is a measured property here, not an opinion about it. Everything that
+ * has to be legible — each line of copy, and the three hero stills that carry
+ * the endpoint's own output — carries a reading budget in seconds (READING,
+ * below), and `brag/cut.mjs` measures each one's real full-opacity dwell out of
+ * the rendered page and fails the build when one comes up short. The scene
+ * boundaries are the answer to that budget rather than a summary of it: the
+ * first cut of this piece gave the hook's thirteen words 1.34s, which is 9.7
+ * words a second, and gave the pipeline's second caption 0.39s. The boundaries
+ * moved, the copy gave up the four lines the pictures already said, and then the
+ * piece had to get longer than twenty seconds to hold what was left.
+ *
+ * The design tokens and the three faces are the real ones — the site's own
+ * `global.css` is inlined by the mounting page (importing it would rename the
+ * shared stylesheet chunk and touch every shipped page), and the faces load
+ * from the same Google Fonts stylesheet BaseLayout uses. The four typographic
+ * and schematic scenes are authored here; scenes 4 and 5 are the three captured
+ * frames (`brag/out/{ask,answer,abstention}.png`) mounted as the hero, because
+ * those frames are the verified replay of the real endpoint's bytes.
+ *
+ * The motion is slower than a twenty-second cut's would be, on purpose: the rig
+ * draws over a second instead of half of one, the pipeline's four columns fill a
+ * beat apart, and the stamp box takes six tenths per side. Breathing is a
+ * property of the reveals as much as of the holds.
+ *
+ * Stills are served from `/frames/` by the capture server (`brag/cut.mjs`
+ * maps that route at `brag/out/`). Open this page without that server and the
+ * demo scenes are empty; the frame says so rather than lying quietly.
+ */
+import fixture from '../../brag/fixture.json';
+import BrandMark from './BrandMark.astro';
+
+// Real bytes, not retyped copy: the stamp the proof scene draws its box around
+// is computed from the fixture the endpoint actually returned.
+const answer = fixture.cases.find((c) => c.id === 'answer')!;
+const stamp = answer.stamp;
+const stampLabel = `FROM ${stamp.camera} · ${stamp.startClock}`;
+---
+
+<div class="brag-frame" data-cut>
+  <!-- The instrument chrome: a quiet wordmark and a 1px progress line. It runs
+       the whole piece, so the frame always says where it is in the thirty-four
+       seconds. -->
+  <header class="cut-chrome">
+    <span class="cut-wordmark">Journeyman</span>
+  </header>
+
+  <!-- Scene 1 — the hook. Type only, no geometry, no invented operators. -->
+  <section class="cut-scene" data-scene="hook">
+    <div class="cut-inner cut-inner-hook">
+      <span class="hook-rule"></span>
+      <h1 class="hook-line">
+        Your best machinist retires Friday.<br />30 years of knowledge walks out the door.
+      </h1>
+    </div>
+  </section>
+
+  <!-- Scene 2 — the capture. Descriptive, not demonstrative: it draws the rig
+       rather than showing footage of it (#29 records that as a decision). The
+       line is the enumeration only — "Journeyman films the fix" was cut
+       because the four camera marks around the mill are those words, drawn. -->
+  <section class="cut-scene" data-scene="capture">
+    <div class="cut-inner cut-inner-two">
+      <p class="cut-line rig-line">
+        Every jam. Every diagnosis. Every lesson.
+      </p>
+      <figure class="cut-figure">
+        <svg class="rig-svg" width="900" height="520" viewBox="0 0 900 520" aria-hidden="true">
+          <!-- Hairline machine outline: a vertical mill seen from the side. -->
+          <g class="rig-machine">
+            <rect x="540" y="80" width="120" height="300" />
+            <rect x="420" y="84" width="180" height="56" />
+            <rect x="490" y="140" width="40" height="30" />
+            <rect x="498" y="170" width="24" height="26" />
+            <path d="M500 196 L520 196 L510 224 Z" />
+            <rect x="280" y="300" width="280" height="16" />
+            <rect x="360" y="264" width="76" height="36" />
+            <rect x="372" y="250" width="52" height="14" />
+            <rect x="260" y="388" width="340" height="26" />
+          </g>
+
+          <!-- Four camera marks, mono-labelled, each with its sight line to the
+               work zone. -->
+          <g class="rig-cam">
+            <line class="rig-sight" x1="500" y1="54" x2="404" y2="246" />
+            <line class="rig-cross" x1="482" y1="40" x2="518" y2="40" />
+            <line class="rig-cross" x1="500" y1="22" x2="500" y2="58" />
+            <rect class="rig-mark" x="495" y="35" width="10" height="10" />
+            <text class="rig-label rig-label-up" x="500" y="16">HEAD</text>
+          </g>
+          <g class="rig-cam">
+            <line class="rig-sight" x1="164" y1="300" x2="352" y2="282" />
+            <line class="rig-cross" x1="132" y1="300" x2="168" y2="300" />
+            <line class="rig-cross" x1="150" y1="282" x2="150" y2="318" />
+            <rect class="rig-mark" x="145" y="295" width="10" height="10" />
+            <text class="rig-label" x="150" y="272">SIDE-A</text>
+          </g>
+          <g class="rig-cam">
+            <line class="rig-sight" x1="744" y1="300" x2="462" y2="282" />
+            <line class="rig-cross" x1="742" y1="300" x2="778" y2="300" />
+            <line class="rig-cross" x1="760" y1="282" x2="760" y2="318" />
+            <rect class="rig-mark" x="755" y="295" width="10" height="10" />
+            <text class="rig-label" x="760" y="272">SIDE-B</text>
+          </g>
+          <g class="rig-cam">
+            <line class="rig-sight" x1="262" y1="446" x2="392" y2="302" />
+            <line class="rig-cross" x1="232" y1="460" x2="268" y2="460" />
+            <line class="rig-cross" x1="250" y1="442" x2="250" y2="478" />
+            <rect class="rig-mark" x="245" y="455" width="10" height="10" />
+            <text class="rig-label rig-label-down" x="250" y="506">CHEST</text>
+          </g>
+        </svg>
+      </figure>
+    </div>
+  </section>
+
+  <!-- Scene 3 — the pipeline. Blueprint columns that fill left to right. -->
+  <section class="cut-scene" data-scene="pipeline">
+    <div class="cut-inner cut-inner-two">
+      <!-- One line, not two. "Footage -> transcript -> embeddings -> a living
+           knowledge base" was cut: the four columns beside it are labelled
+           Clip / Transcript / Embeddings / Index, so the sentence only said the
+           picture out loud — and its row was the shortest-lived text in the
+           cut at 0.39s. The line that stayed is the founding sentence from the
+           Partnership Agreement, and it is the one the columns add up to. -->
+      <div class="cut-rail">
+        <p class="cut-line pipe-line">
+          Something a plant can use. And a machine can learn from.
+        </p>
+      </div>
+      <ol class="pipe-stages">
+        <li class="pipe-stage">
+          <span class="pipe-top"><span class="pipe-top-fill"></span></span>
+          <span class="pipe-art">
+            <svg width="150" height="120" viewBox="0 0 150 120" aria-hidden="true">
+              <rect x="6" y="24" width="138" height="72" />
+              <line x1="40" y1="18" x2="40" y2="30" />
+              <line x1="76" y1="18" x2="76" y2="30" />
+              <line x1="112" y1="18" x2="112" y2="30" />
+              <line x1="40" y1="90" x2="40" y2="102" />
+              <line x1="76" y1="90" x2="76" y2="102" />
+              <line x1="112" y1="90" x2="112" y2="102" />
+              <path d="M62 44 L92 60 L62 76 Z" />
+            </svg>
+          </span>
+          <span class="pipe-label">Clip</span>
+        </li>
+        <li class="pipe-stage">
+          <span class="pipe-top"><span class="pipe-top-fill"></span></span>
+          <span class="pipe-art">
+            <svg width="150" height="120" viewBox="0 0 150 120" aria-hidden="true">
+              <line x1="6" y1="30" x2="144" y2="30" />
+              <line x1="6" y1="48" x2="112" y2="48" />
+              <line x1="6" y1="66" x2="134" y2="66" />
+              <line x1="6" y1="84" x2="88" y2="84" />
+            </svg>
+            <span class="pipe-micro">00:11.0</span>
+          </span>
+          <span class="pipe-label">Transcript</span>
+        </li>
+        <li class="pipe-stage">
+          <span class="pipe-top"><span class="pipe-top-fill"></span></span>
+          <span class="pipe-art">
+            <svg width="150" height="120" viewBox="0 0 150 120" aria-hidden="true">
+              <g class="pipe-dots">
+                <rect x="14" y="34" width="4" height="4" />
+                <rect x="40" y="34" width="4" height="4" />
+                <rect x="66" y="34" width="4" height="4" />
+                <rect x="92" y="34" width="4" height="4" />
+                <rect x="118" y="34" width="4" height="4" />
+                <rect x="14" y="56" width="4" height="4" />
+                <rect x="40" y="56" width="4" height="4" />
+                <rect x="66" y="56" width="4" height="4" />
+                <rect x="92" y="56" width="4" height="4" />
+                <rect x="118" y="56" width="4" height="4" />
+                <rect x="14" y="78" width="4" height="4" />
+                <rect x="40" y="78" width="4" height="4" />
+                <rect x="66" y="78" width="4" height="4" />
+                <rect x="92" y="78" width="4" height="4" />
+                <rect x="118" y="78" width="4" height="4" />
+              </g>
+              <g class="pipe-vectors">
+                <rect x="12" y="32" width="8" height="8" />
+                <rect x="64" y="54" width="8" height="8" />
+                <rect x="116" y="76" width="8" height="8" />
+              </g>
+            </svg>
+          </span>
+          <span class="pipe-label">Embeddings</span>
+        </li>
+        <li class="pipe-stage">
+          <span class="pipe-top"><span class="pipe-top-fill"></span></span>
+          <span class="pipe-art pipe-art-index">
+            <span class="pipe-index-row"><span>atc-jam</span></span>
+            <span class="pipe-index-row"><span>sensor-trip</span></span>
+            <span class="pipe-index-row"><span>way-lube</span></span>
+          </span>
+          <span class="pipe-label">Index</span>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Scene 4 — the demo (hero). The real endpoint's output, in the ask-console
+       and answer-slip chrome, with the copy in the margin like a printed note.
+       The two stills trade places 0.70s into the scene: the question in, then
+       the answer. The ask frame is a beat rather than a read — see the render
+       notes below for why it is that short. -->
+  <section class="cut-scene" data-scene="demo">
+    <div class="cut-inner cut-inner-still">
+      <div class="cut-rail cut-rail-narrow rail-demo">
+        <p class="cut-kicker">Real endpoint output</p>
+        <p class="cut-line">Ask it anything.</p>
+      </div>
+      <!-- No push-in, deliberately: any scale resamples the frames, and these
+           frames are the verified replay of real bytes. Scaling the hero by a
+           visible amount softens exactly the type the cut is showing off, and
+           scaling it imperceptibly buys nothing worth that. -->
+      <div class="still-stack">
+        <img class="cut-still" data-still="ask" src="/frames/ask.png" alt="" />
+        <img class="cut-still" data-still="answer" src="/frames/answer.png" alt="" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Scene 5 — the proof (hero). The stamp the answer cites gets drawn in
+       place, then the refusal takes the frame: a system that says "I don't
+       know" and proves it is the beat a plant manager believes. -->
+  <section class="cut-scene" data-scene="proof">
+    <div class="cut-inner cut-inner-still">
+      <div class="cut-rail cut-rail-narrow rail-proof">
+        <p class="cut-kicker cut-kicker-rust">{stampLabel}</p>
+        <!-- "The exact camera. The exact second." was cut for the same reason
+             as the pipeline's first line: the stamp box draws around exactly
+             those words in the frame, and the kicker above already names the
+             camera and the second. Saying it three times cost the refusal 0.4s
+             of hold, and the refusal is the beat worth holding. -->
+        <p class="cut-line">
+          Every answer cites its source.
+        </p>
+      </div>
+      <img class="cut-still" data-still="answer" src="/frames/answer.png" alt="" />
+      <img class="cut-still" data-still="abstention" src="/frames/abstention.png" alt="" />
+      <!-- The veil, punched through at the stamp: everything but the receipt
+           steps back while the box draws. An SVG mask, so nothing resamples. -->
+      <svg class="stamp-scrim" width="1920" height="1080" aria-hidden="true">
+        <defs>
+          <mask id="stamp-hole">
+            <rect width="1920" height="1080" fill="#fff" />
+            <rect class="stamp-hole" x="0" y="0" width="0" height="0" fill="#000" />
+          </mask>
+        </defs>
+        <rect
+          class="stamp-veil"
+          width="1920"
+          height="1080"
+          fill="#16120E"
+          mask="url(#stamp-hole)"
+        />
+      </svg>
+      <span class="stamp-box"></span>
+    </div>
+  </section>
+
+  <!-- Scene 6 — the tagline. The line alone, mono on the warm ground, with the
+       mark beneath it and the wordmark still in the chrome, which is why the
+       chrome runs to the last frame. -->
+  <section class="cut-scene" data-scene="tagline">
+    <div class="cut-inner cut-inner-tag">
+      <span class="tag-rule"></span>
+      <p class="tag-line">What happens on the floor<br />stays on the floor.</p>
+      <!-- The mark alone. "Journeyman — the plant floor, remembered." was the
+           sub-line #29 kept as its D' alternative; it restates the tagline, and
+           the wordmark in the chrome already names the product on this card, so
+           what it was really spending was the second the tagline needed to be
+           read. It still ships in the share copy and on the site's own pages. -->
+      <div class="tag-meta">
+        <BrandMark size={56} />
+      </div>
+    </div>
+  </section>
+
+  <div class="cut-progress"><span class="cut-progress-fill"></span></div>
+  <div class="cut-fade"></div>
+  <p class="cut-note">stills not mounted &mdash; run <code>brag/cut.mjs</code> (it serves brag/out at /frames)</p>
+</div>
+
+<style is:inline>
+  /* The mounting page styles .brag-frame as a centered flex box for the console.
+     The cut owns its own layout: absolute scenes over a fixed ground.
+
+     Rust is the theme's only saturated hue, and the Journeyman override in
+     global.css maps the accent token onto it (#E25822). Named locally so these
+     rules read in rust terms rather than in the old blue ones. */
+  .brag-frame[data-cut] {
+    --cut-rust: var(--color-accent-blue);
+    position: relative;
+    display: block;
+  }
+
+  .cut-scene {
+    position: absolute;
+    inset: 0;
+    /* Painted per frame by the timeline script; never by a CSS transition. */
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .cut-inner {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Scene 1 — the hook. */
+  .cut-inner-hook {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 0 96px;
+  }
+
+  .hook-rule {
+    display: block;
+    width: 0;
+    height: 2px;
+    background: var(--cut-rust);
+    margin-bottom: 40px;
+  }
+
+  .hook-line {
+    margin: 0;
+    font-family: var(--font-editorial);
+    font-weight: 400;
+    font-size: 84px;
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
+    /* The measure is the frame minus its margins: at 84px the second sentence
+       is one line, and a wrapping hook would be three lines of display type
+       read at speed. */
+    max-width: 1640px;
+  }
+
+  /* Scenes 2 and 3 — copy rail left, figure right. */
+  .cut-inner-two {
+    display: flex;
+    align-items: center;
+    gap: 140px;
+    padding: 0 96px;
+  }
+
+  .cut-inner-two > .cut-rail {
+    flex: 0 0 660px;
+  }
+
+  .cut-inner-two > .cut-figure {
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: center;
+    margin: 0;
+  }
+
+  .cut-kicker {
+    margin: 0 0 22px;
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 600;
+    /* Explicit, not `normal`: the reading gate counts a card's rows as its box
+       height over its line height, and an inherited `normal` is not a number. */
+    line-height: 1.4;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+
+  .cut-kicker-rust {
+    color: var(--cut-rust);
+  }
+
+  .cut-line {
+    margin: 0;
+    font-family: var(--font-editorial);
+    font-size: 42px;
+    line-height: 1.36;
+    color: var(--color-text-primary);
+  }
+
+  /* Scene 2 — the rig schematic. */
+  .rig-svg {
+    overflow: visible;
+  }
+
+  .rig-machine rect,
+  .rig-machine path {
+    fill: none;
+    stroke: var(--color-text-secondary);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .rig-sight {
+    stroke: var(--color-border-subtle);
+    stroke-width: 1;
+    stroke-dasharray: 5 6;
+  }
+
+  .rig-cross {
+    stroke: var(--color-text-secondary);
+    stroke-width: 1;
+  }
+
+  .rig-mark {
+    fill: var(--cut-rust);
+  }
+
+  .rig-label {
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    fill: var(--color-text-secondary);
+    text-anchor: middle;
+  }
+
+  /* Scene 3 — the pipeline. */
+  .pipe-stages {
+    flex: 1 1 auto;
+    display: flex;
+    gap: 34px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .pipe-stage {
+    flex: 1 1 0;
+    opacity: 0.28;
+  }
+
+  .pipe-top {
+    display: block;
+    position: relative;
+    height: 1px;
+    background: var(--color-border-subtle);
+  }
+
+  .pipe-top-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--cut-rust);
+  }
+
+  .pipe-art {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 150px;
+    margin: 30px 0 24px;
+  }
+
+  .pipe-art svg line,
+  .pipe-art svg rect,
+  .pipe-art svg path {
+    fill: none;
+    stroke: var(--color-text-secondary);
+    stroke-width: 1;
+  }
+
+  /* Both of these beat `.pipe-art svg rect` on specificity (two classes), so
+     they do not need !important to keep their fills. */
+  .pipe-art .pipe-dots rect {
+    fill: var(--color-text-secondary);
+    stroke: none;
+  }
+
+  .pipe-art .pipe-vectors rect {
+    fill: var(--cut-rust);
+    stroke: none;
+  }
+
+  .pipe-micro {
+    margin-top: 14px;
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--color-text-secondary);
+  }
+
+  .pipe-art-index {
+    justify-content: center;
+    gap: 14px;
+  }
+
+  .pipe-index-row {
+    display: block;
+    padding: 9px 0 9px 16px;
+    border-bottom: 1px solid var(--color-border-subtle);
+    border-left: 2px solid var(--cut-rust);
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--color-text-secondary);
+  }
+
+  .pipe-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+
+  /* Scenes 4 and 5 — the stills, and the margin note beside them. The rail is
+     narrow on purpose: the console starts at x=340 in all three frames (the
+     answer slip's card at x=440), so 96..312 is the only strip of frame that is
+     empty in every one of them. Widened from 190px to 216px and the type raised
+     from 30px to 36px, which is what turned a tall thin stack of two-word
+     fragments into something you read once. */
+  .cut-inner-still {
+    display: flex;
+    align-items: center;
+    padding: 0 96px;
+  }
+
+  /* The stills are `position: absolute`, so an in-flow rail would paint *under*
+     them — the hero scenes would run with no copy at all. Lift the rail above
+     them; the stills stay below everything the cut draws on purpose. */
+  .cut-rail-narrow {
+    flex: 0 0 216px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .cut-rail-narrow .cut-line {
+    font-size: 36px;
+    line-height: 1.3;
+  }
+
+  .still-stack {
+    position: absolute;
+    inset: 0;
+  }
+
+  .cut-still {
+    position: absolute;
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+  }
+
+  .stamp-scrim {
+    position: absolute;
+    inset: 0;
+  }
+
+  .stamp-veil {
+    opacity: 0;
+  }
+
+  .stamp-box {
+    position: absolute;
+    border: 1px solid var(--cut-rust);
+    width: 0;
+    height: 0;
+    opacity: 0;
+  }
+
+  /* Scene 6 — the tagline. */
+  .cut-inner-tag {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .tag-rule {
+    display: block;
+    width: 0;
+    height: 2px;
+    background: var(--cut-rust);
+    margin-bottom: 40px;
+  }
+
+  .tag-line {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 52px;
+    line-height: 1.42;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-text-primary);
+  }
+
+  .tag-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    margin-top: 56px;
+    color: var(--color-text-primary);
+  }
+
+  /* Chrome. */
+  .cut-chrome {
+    position: absolute;
+    top: 46px;
+    left: 96px;
+    z-index: 3;
+  }
+
+  .cut-wordmark {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+
+  .cut-progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: var(--color-border-subtle);
+    z-index: 3;
+  }
+
+  .cut-progress-fill {
+    display: block;
+    width: 0;
+    height: 2px;
+    background: var(--cut-rust);
+  }
+
+  /* Bookends: the piece opens and closes on the ground. */
+  .cut-fade {
+    position: absolute;
+    inset: 0;
+    background: var(--color-bg-primary);
+    opacity: 1;
+    pointer-events: none;
+    z-index: 4;
+  }
+
+  .cut-note {
+    display: none;
+    position: absolute;
+    left: 96px;
+    bottom: 40px;
+    z-index: 5;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    color: var(--cut-rust);
+  }
+
+  [data-stills-missing] .cut-note {
+    display: block;
+  }
+</style>
+
+<script is:inline>
+  (() => {
+    const frame = document.querySelector('[data-cut]');
+    if (!frame) return;
+
+    const DURATION = 34;
+
+    // Scene boundaries, in seconds. The cut is 34.0s by construction: the
+    // timeline is the video's clock, not a description of one. Each boundary is
+    // the moment its scene's last reading budget is spent plus the dissolve, so
+    // the six of them add up to exactly thirty-four.
+    const SCENES = [
+      { id: 'hook', from: 0, to: 4.5 },
+      { id: 'capture', from: 4.5, to: 8.1 },
+      { id: 'pipeline', from: 8.1, to: 13.4 },
+      { id: 'demo', from: 13.4, to: 22.2 },
+      { id: 'proof', from: 22.2, to: 30.2 },
+      { id: 'tagline', from: 30.2, to: 34 },
+    ];
+    const S = Object.fromEntries(SCENES.map((s) => [s.id, s]));
+
+    /** Time the outgoing scene takes to dissolve into the next, in seconds. */
+    const CUT = 0.12;
+    /** The bookends: the piece arrives out of the ground and returns to it. */
+    const OPEN_FADE = 0.4;
+    const CLOSE_FADE = 0.5;
+    /** Every line rises over this long, ending at its `land` offset. */
+    const RISE = 0.35;
+
+    /**
+     * The reading budget, in seconds held at full opacity.
+     *
+     * Anchored rather than invented, and set where a reader can finish rather
+     * than where text is technically legible: CAPTION charges 0.5s to find the
+     * line plus 0.4s per word, which is 2.2 words a second — slower than the
+     * 160-180 wpm broadcast band on purpose, because a caption beside an
+     * illustration is competing with the illustration. A title card has no
+     * competing text and is read in a fixation or two rather than word by word,
+     * so DISPLAY charges 0.45 + 0.25s per word, which is 3.0 a second.
+     *
+     * `brag/cut.mjs` measures the real dwell of every entry below and fails the
+     * build when one comes up short, so these are a contract and not a comment.
+     */
+    const CAPTION = (words) => 0.5 + 0.4 * words;
+    const DISPLAY = (words) => 0.45 + 0.25 * words;
+
+    /**
+     * Everything that has to be legible: each line of copy, and the three hero
+     * stills carrying the endpoint's own output. Each entry says where it lives,
+     * how many words it carries, what that buys, the offset from its scene's
+     * start at which it reaches full opacity, and the most rows it may wrap to.
+     * Exposed as `window.__brag.reading`, so the capture run checks the rendered
+     * frames against this table rather than against anyone's memory of it.
+     *
+     * The stills are budgeted as artefacts to scan, not paragraphs to finish. The
+     * answer slip is around sixty words, so no hold short of twenty-five seconds
+     * would read it whole: its budget is the headline, the source stamp, and the
+     * `0 unverified` line, and the ask frame's is enough to recognise the
+     * question rather than to answer it — the same question sits in the slip's
+     * mono line, and the slip is where that reading is paid for.
+     *
+     * The diagram's own labels (HEAD, SIDE-A, Clip, Transcript, ...) are the
+     * illustration, not copy: they are drawn a mark at a time and then hold for
+     * the rest of their scene, so they are not on the reading clock.
+     */
+    const READING = [
+      { line: '.hook-line', what: 'the hook', scene: 'hook', words: 13, tier: 'display', land: 0.45, maxLines: 2 },
+      { line: '.rig-line', what: 'the capture line', scene: 'capture', words: 6, tier: 'caption', land: 0.5, maxLines: 2 },
+      { line: '.pipe-line', what: 'the pipeline line', scene: 'pipeline', words: 10, tier: 'caption', land: 0.5, maxLines: 2 },
+      { line: '.rail-demo .cut-kicker', what: 'the demo kicker', scene: 'demo', words: 3, tier: 'caption', land: 0.5, maxLines: 2 },
+      { line: '.rail-demo .cut-line', what: 'the demo line', scene: 'demo', words: 3, tier: 'caption', land: 0.5, maxLines: 2 },
+      {
+        line: '.cut-scene[data-scene="demo"] .cut-still[data-still="ask"]',
+        what: 'the ask frame',
+        scene: 'demo',
+        words: 0,
+        tier: 'still',
+        land: 0.12,
+        maxLines: 0,
+        budget: 2.5,
+      },
+      {
+        line: '.cut-scene[data-scene="demo"] .cut-still[data-still="answer"]',
+        what: 'the answer slip',
+        scene: 'demo',
+        words: 0,
+        tier: 'still',
+        land: 3,
+        maxLines: 0,
+        budget: 5.5,
+      },
+      { line: '.rail-proof .cut-kicker', what: 'the proof kicker', scene: 'proof', words: 4, tier: 'caption', land: 0.5, maxLines: 2 },
+      { line: '.rail-proof .cut-line', what: 'the proof line', scene: 'proof', words: 5, tier: 'caption', land: 0.5, maxLines: 3 },
+      {
+        line: '.cut-scene[data-scene="proof"] .cut-still[data-still="abstention"]',
+        what: 'the refusal',
+        scene: 'proof',
+        words: 0,
+        tier: 'still',
+        land: 3.55,
+        maxLines: 0,
+        budget: 4,
+      },
+      { line: '.tag-line', what: 'the tagline', scene: 'tagline', words: 9, tier: 'display', land: 0.45, maxLines: 2 },
+    ].map((entry) => ({
+      ...entry,
+      // A still carries its budget outright; a line's comes from its words.
+      budget:
+        entry.budget ??
+        Number((entry.tier === 'display' ? DISPLAY : CAPTION)(entry.words).toFixed(3)),
+      from: S[entry.scene].from,
+      to: S[entry.scene].to,
+    }));
+
+    const q = (sel) => frame.querySelector(sel);
+    const qa = (sel) => Array.from(frame.querySelectorAll(sel));
+
+    const clamp = (value, lo, hi) => (value < lo ? lo : value > hi ? hi : value);
+    /** Eased 0..1 ramp, clamped outside [a, b]. */
+    const ramp = (t, a, b) => {
+      const x = clamp((t - a) / (b - a), 0, 1);
+      return x * x * (3 - 2 * x);
+    };
+    /**
+     * A line's arrival: `rise(t, S.hook, 0.35)` is at full opacity at exactly
+     * 0.35s into the hook scene. One ramp shape for every line is what makes the
+     * table above a thing the driver can check, because `land` then means the
+     * same thing in the render code and in the budget.
+     */
+    const rise = (t, scene, land) => ramp(t, scene.from + land - RISE, scene.from + land);
+
+    const scene = Object.fromEntries(SCENES.map((s) => [s.id, q(`[data-scene="${s.id}"]`)]));
+
+    const demoAsk = scene.demo.querySelector('[data-still="ask"]');
+    const demoAnswer = scene.demo.querySelector('[data-still="answer"]');
+    const proofAbstention = scene.proof.querySelector('[data-still="abstention"]');
+    const stills = qa('.cut-still');
+
+    const el = {
+      fade: q('.cut-fade'),
+      progress: q('.cut-progress-fill'),
+      hookRule: q('.hook-rule'),
+      hookLine: q('.hook-line'),
+      rig: q('.rig-svg'),
+      rigCams: qa('.rig-cam'),
+      rigLine: q('.rig-line'),
+      pipeStages: qa('.pipe-stage'),
+      pipeLine: q('.pipe-line'),
+      demoRail: q('.rail-demo'),
+      proofRail: q('.rail-proof'),
+      stampBox: q('.stamp-box'),
+      stampHole: q('.stamp-hole'),
+      stampVeil: q('.stamp-veil'),
+      tagRule: q('.tag-rule'),
+      tagLine: q('.tag-line'),
+      tagMeta: q('.tag-meta'),
+    };
+
+    /**
+     * The stamp's box in the answer frame, in frame pixels. The capture runner
+     * measures `.ask-source` on the answer page and hands it over; without it
+     * the proof scene just doesn't draw the box rather than drawing it wrong.
+     */
+    let stamp = { x: 0, y: 0, width: 0, height: 0 };
+
+    /** Paint the whole frame for `t` seconds. Pure: same t, same pixels. */
+    function render(t) {
+      const time = clamp(t, 0, DURATION);
+
+      // Bookends. Half a second in and out, which at this length is a settle
+      // rather than a fade. The chrome never leaves: the closing card needs the
+      // wordmark on it now that the sub-line beneath the mark is gone.
+      el.fade.style.opacity = String(
+        Math.max(1 - ramp(time, 0, OPEN_FADE), ramp(time, DURATION - CLOSE_FADE, DURATION)),
+      );
+      el.progress.style.width = `${(time / DURATION) * 100}%`;
+
+      for (const spec of SCENES) {
+        const element = scene[spec.id];
+        const last = spec.to >= DURATION;
+        // The opening scene is already on stage: the piece's own fade from the
+        // ground handles 0.0s, so a ramp here would show a black frame at t=0.
+        const opening = spec.from === 0 ? 1 : ramp(time, spec.from, spec.from + CUT);
+        const opacity = Math.min(opening, last ? 1 : 1 - ramp(time, spec.to - CUT, spec.to));
+        element.style.opacity = String(opacity);
+        element.style.visibility = opacity < 0.01 ? 'hidden' : 'visible';
+      }
+
+      // 1 — the hook. Both sentences are one thought on one ramp: staggering
+      // them would give the first only the seconds before the second arrives,
+      // and thirteen words over 3.9s is 3.3 words a second, which reads.
+      el.hookRule.style.width = `${ramp(time, S.hook.from + 0.15, S.hook.from + 0.55) * 112}px`;
+      const hook = rise(time, S.hook, 0.45);
+      el.hookLine.style.opacity = String(hook);
+      el.hookLine.style.transform = `translateY(${(1 - hook) * 18}px)`;
+
+      // 2 — the capture. The line lands first, because it is the payload, and
+      // the rig draws under it: outline, then the four camera marks in turn.
+      const rigLine = rise(time, S.capture, 0.5);
+      el.rigLine.style.opacity = String(rigLine);
+      el.rigLine.style.transform = `translateY(${(1 - rigLine) * 14}px)`;
+      el.rig.style.opacity = String(0.92 * ramp(time, S.capture.from + 0.7, S.capture.from + 1.4));
+      el.rigCams.forEach((cam, index) => {
+        cam.style.opacity = String(
+          ramp(time, S.capture.from + 0.95 + index * 0.3, S.capture.from + 1.25 + index * 0.3),
+        );
+      });
+
+      // 3 — the pipeline fills left to right under the line that says what the
+      // four columns add up to. Both stay lit: the caption is one line and the
+      // columns are a drawing, so neither fades mid-scene.
+      el.pipeStages.forEach((stage, index) => {
+        const at = S.pipeline.from + 0.55 + index * 0.5;
+        const lit = ramp(time, at, at + 0.45);
+        stage.style.opacity = String(0.28 + 0.72 * lit);
+        stage.querySelector('.pipe-top-fill').style.width = `${lit * 100}%`;
+      });
+      el.pipeLine.style.opacity = String(rise(time, S.pipeline, 0.5));
+
+      // 4 — the demo: the question in, then the answer, at native resolution.
+      // The ask frame holds 2.6s now instead of 0.38s, which is long enough to
+      // read the question as a question; the slip then holds 5.7s for the
+      // answer, the source stamp around it, and the "0 unverified" line.
+      const demoRail = rise(time, S.demo, 0.5);
+      el.demoRail.style.opacity = String(demoRail);
+      el.demoRail.style.transform = `translateY(${(1 - demoRail) * 16}px)`;
+      const swap = ramp(time, S.demo.from + 2.7, S.demo.from + 3.0);
+      demoAsk.style.opacity = String(1 - swap);
+      demoAnswer.style.opacity = String(swap);
+
+      // 5 — the proof: the stamp box draws in place, then the refusal. The
+      // margin note holds the whole scene — the refusal is the other half of
+      // the claim, not a replacement for it — and it sits in a strip of frame
+      // that is empty in all three stills, so it never covers the receipt.
+      const proofRail =
+        rise(time, S.proof, 0.5) * (1 - ramp(time, S.proof.from + 3.25, S.proof.from + 3.5));
+      el.proofRail.style.opacity = String(proofRail);
+      el.proofRail.style.transform = `translateY(${(1 - proofRail) * 16}px)`;
+      const abstain = ramp(time, S.proof.from + 3.25, S.proof.from + 3.55);
+      proofAbstention.style.opacity = String(abstain);
+
+      const drawn = stamp.width > 0;
+      // Six tenths per side: the box is drawn here, not flashed on.
+      const across = ramp(time, S.proof.from + 1.3, S.proof.from + 1.9);
+      const down = ramp(time, S.proof.from + 1.6, S.proof.from + 2.2);
+      const pad = 16;
+      const boxWidth = stamp.width + pad * 2;
+      const boxHeight = stamp.height + pad * 2;
+      el.stampBox.style.left = `${stamp.x - pad}px`;
+      el.stampBox.style.top = `${stamp.y - pad}px`;
+      el.stampBox.style.width = `${across * boxWidth}px`;
+      el.stampBox.style.height = `${down * boxHeight}px`;
+      el.stampBox.style.opacity = drawn && across > 0 && abstain < 0.5 ? String(across) : '0';
+
+      // The veil only starts once the box is closed, so the beat reads as the
+      // box *finding* the receipt and then the room going quiet around it.
+      el.stampHole.setAttribute('x', String(stamp.x - pad));
+      el.stampHole.setAttribute('y', String(stamp.y - pad));
+      el.stampHole.setAttribute('width', String(drawn ? boxWidth : 0));
+      el.stampHole.setAttribute('height', String(drawn ? boxHeight : 0));
+      el.stampVeil.style.opacity = String(drawn ? 0.45 * down * (1 - abstain) : 0);
+
+      // 6 — the tagline, and the mark under it. Both land inside the first
+      // three quarters of a second, so the card is one finished thing for the
+      // whole of its hold.
+      el.tagRule.style.width = `${ramp(time, S.tagline.from + 0.15, S.tagline.from + 0.55) * 72}px`;
+      const tag = rise(time, S.tagline, 0.45);
+      el.tagLine.style.opacity = String(tag);
+      el.tagLine.style.transform = `translateY(${(1 - tag) * 18}px)`;
+      const mark = ramp(time, S.tagline.from + 0.25, S.tagline.from + 0.7);
+      el.tagMeta.style.opacity = String(mark);
+      el.tagMeta.style.transform = `translateY(${(1 - mark) * 14}px)`;
+    }
+
+    let mode = 'idle';
+    let frameId = 0;
+
+    function play() {
+      mode = 'play';
+      const started = performance.now();
+      const step = () => {
+        if (mode !== 'play') return;
+        const t = (performance.now() - started) / 1000;
+        if (t >= DURATION) {
+          render(DURATION);
+          mode = 'idle';
+          return;
+        }
+        render(t);
+        frameId = requestAnimationFrame(step);
+      };
+      frameId = requestAnimationFrame(step);
+    }
+
+    const ready = Promise.all([
+      document.fonts.ready,
+      ...stills.map((img) =>
+        img.decode().then(
+          () => true,
+          () => false,
+        ),
+      ),
+    ]).then((results) => {
+      const decodes = results.slice(1);
+      if (decodes.some((ok) => !ok)) frame.setAttribute('data-stills-missing', '1');
+    });
+
+    window.__brag = {
+      duration: DURATION,
+      scenes: SCENES,
+      /** The reading budget each line is held to, with where it lands. */
+      reading: READING,
+      ready,
+      /** Paint exactly the frame at `t` seconds. Stops any playback. */
+      seek(t) {
+        mode = 'seek';
+        cancelAnimationFrame(frameId);
+        render(Number(t));
+      },
+      /**
+       * How visible every tracked line is right now, as the viewer sees it: the
+       * line's own opacity times each ancestor's, scaled by what the bookend
+       * cover is hiding. The cover is painted *over* the whole frame and fades
+       * the frame into the ground, so it subtracts rather than multiplies —
+       * treating it as a multiplier reports a frame that is fully covered as
+       * fully visible, which is how this check passed its own first draft while
+       * the cut was still unreadable.
+       *
+       * `brag/cut.mjs` walks the clock with this to measure each line's real
+       * dwell instead of trusting the table above.
+       */
+      opacities() {
+        const cover = Number(getComputedStyle(el.fade).opacity);
+        const out = {};
+        for (const entry of READING) {
+          const node = frame.querySelector(entry.line);
+          let value = node ? 1 - cover : 0;
+          for (let e = node; e && e !== frame.parentElement; e = e.parentElement) {
+            value *= Number(getComputedStyle(e).opacity);
+          }
+          out[entry.line] = value;
+        }
+        return out;
+      },
+      /** Where the source stamp sits in the answer frame, in frame pixels. */
+      setup(config) {
+        if (config && config.stamp) stamp = config.stamp;
+      },
+      play,
+      pause() {
+        mode = 'idle';
+        cancelAnimationFrame(frameId);
+      },
+    };
+
+    // Play on load so a human opening this page sees the piece. The capture
+    // runner calls seek() right after ready, which takes the clock away from
+    // rAF and pins the frame to the time it asks for.
+    ready.then(() => {
+      render(0);
+      play();
+    });
+  })();
+</script>

@@ -1,0 +1,160 @@
+---
+// Askable-library demo — the flagship proof on /journeyman.
+//
+// It is scripted, not a model: the four questions, their answers, and the
+// segment each answer came from are all in this markup, so the first one reads
+// with JavaScript off, search engines see the whole corpus, and the copy guards
+// can check every word of it. The client script only chooses which slip is
+// showing — it scores a typed question against the keyword index carried on the
+// chips, with no network and no tokens.
+//
+// Keep the ids in step: every chip's `data-ask-entry` must match one slip's
+// `data-ask-answer`, and `npm run check:demo` fails the build if that drifts.
+import { DEMO_ANSWERS, scrubPercent } from '../lib/library-demo';
+
+const demo = DEMO_ANSWERS;
+---
+
+<div class="ask-console" data-ask-demo>
+  <div class="ask-bar">
+    <span class="ask-bar-name">Journeyman</span>
+    <span class="ask-bar-scope">Machining cell &middot; VMC-04</span>
+    <span class="ask-bar-status" data-ask-status>{demo.length} segments indexed</span>
+  </div>
+
+  <form class="ask-form" data-ask-form>
+    <label class="sr-only" for="ask-input">Ask the sample library a question</label>
+    <input
+      id="ask-input"
+      class="ask-input"
+      type="text"
+      name="q"
+      autocomplete="off"
+      placeholder="Ask the sample library&hellip;"
+      value={demo[0].question}
+      data-ask-input
+    />
+    <button class="btn btn-primary btn-small" type="submit">Ask</button>
+  </form>
+
+  <div class="ask-chips" role="group" aria-label="Sample questions">
+    {
+      demo.map((entry) => (
+        <button type="button" class="ask-chip" data-ask-entry={entry.id} data-ask-match={entry.match}>
+          {entry.question}
+        </button>
+      ))
+    }
+  </div>
+
+  <div class="ask-output" aria-live="polite">
+    {
+      demo.map((entry, index) => (
+        <article class="ask-answer" data-ask-answer={entry.id} hidden={index !== 0}>
+          <p class="ask-answer-q">{entry.question}</p>
+          <p class="ask-answer-a">{entry.answer}</p>
+          <div class="ask-source">
+            <span class="ask-scrub" aria-hidden="true">
+              <span class="ask-scrub-fill" style={`width: ${scrubPercent(entry)}%`} />
+            </span>
+            <p class="ask-source-line">
+              <span class="ask-source-seg">
+                FROM {entry.source.segment} &middot; {entry.source.clock}
+              </span>
+              <span class="ask-source-meta">
+                {entry.source.duration} &middot; {entry.source.session} &middot; {entry.source.role}{' '}
+                &middot; {entry.source.machine}
+              </span>
+            </p>
+          </div>
+        </article>
+      ))
+    }
+    <div class="ask-miss" data-ask-miss hidden>
+      <p class="ask-miss-lead">Nothing in this sample answers <span data-ask-miss-q></span>.</p>
+      <p class="ask-miss-body">
+        The demo corpus holds four captured jobs. A real library holds every session on your floor,
+        indexed the same way.
+      </p>
+    </div>
+  </div>
+
+  <noscript>
+    <p class="ask-noscript">
+      The sample questions need JavaScript. The answer above shows the shape of one: the record, and
+      the segment it came from.
+    </p>
+  </noscript>
+</div>
+
+<p class="ask-note">
+  Scripted sample: four captured jobs, not a floor. In your library, this panel wears your plant's
+  name and logo.
+</p>
+
+<script>
+  // Merges with the markup: the demo's copy is all rendered, so this only picks
+  // which answer slip is showing. The scoring itself lives in src/lib/retrieval.ts,
+  // where `npm run check:demo` runs a labeled battery through it — deterministic
+  // keyword overlap, offline, no model, no tokens.
+  import { pick, type Matchable } from '../lib/retrieval';
+
+  const root = document.querySelector<HTMLElement>('[data-ask-demo]');
+
+  if (root) {
+    const form = root.querySelector<HTMLFormElement>('[data-ask-form]');
+    const input = root.querySelector<HTMLInputElement>('[data-ask-input]');
+    const status = root.querySelector<HTMLElement>('[data-ask-status]');
+    const miss = root.querySelector<HTMLElement>('[data-ask-miss]');
+    const missQuestion = root.querySelector<HTMLElement>('[data-ask-miss-q]');
+    const chips = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-ask-entry]'));
+    const slips = Array.from(root.querySelectorAll<HTMLElement>('[data-ask-answer]'));
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const index: Matchable[] = chips.map((chip) => ({
+      id: chip.dataset.askEntry ?? '',
+      match: chip.dataset.askMatch ?? '',
+    }));
+
+
+    const show = (slip: HTMLElement | null, question: string) => {
+      for (const candidate of slips) candidate.hidden = candidate !== slip;
+      if (miss) miss.hidden = slip !== null;
+      if (slip) {
+        if (input) {
+          const chip = chips.find((candidate) => candidate.dataset.askEntry === slip.dataset.askAnswer);
+          if (chip?.textContent) input.value = chip.textContent.trim();
+        }
+        if (status) status.textContent = `Retrieved 1 of ${slips.length} segments`;
+        return;
+      }
+      if (missQuestion) missQuestion.textContent = `“${question.slice(0, 90)}”`;
+      if (status) status.textContent = 'No segment matched';
+    };
+
+    let timer: number | undefined;
+
+    const reveal = (slip: HTMLElement | null, question: string) => {
+      if (timer) window.clearTimeout(timer);
+      if (status && !reduceMotion) status.textContent = 'Searching the index…';
+      // A beat of telegraphed work: this is a callback, not a model, and the
+      // pause is what a real retrieval round trip feels like.
+      timer = window.setTimeout(() => show(slip, question), reduceMotion ? 0 : 320);
+    };
+
+    for (const chip of chips) {
+      chip.addEventListener('click', () => {
+        const question = (chip.textContent ?? '').trim();
+        const slip = slips.find((candidate) => candidate.dataset.askAnswer === chip.dataset.askEntry) ?? null;
+        reveal(slip, question);
+      });
+    }
+
+    form?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const question = (input?.value ?? '').trim();
+      if (!question) return;
+      const id = pick(question, index);
+      reveal(slips.find((candidate) => candidate.dataset.askAnswer === id) ?? null, question);
+    });
+  }
+</script>

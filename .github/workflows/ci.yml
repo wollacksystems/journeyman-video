@@ -1,0 +1,44 @@
+name: CI
+
+# The gate for this repository is deliberately narrow: the pipeline's own
+# correctness gates live in `brag/cut.mjs` and are fatal in the build, not in CI.
+# What CI protects is the one property the whole repo rests on — that a default
+# build emits no capture pages, so this repository can exist without publishing a
+# half-working surface.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Type-check
+        run: npm run check
+
+      - name: Build
+        run: npm run build
+
+      - name: The capture surface must not ship
+        run: |
+          if [ -e dist/brag ]; then
+            echo "dist/brag exists after a default build."
+            echo "getStaticPaths in src/pages/brag/[state].astro returned paths"
+            echo "without BRAG_CAPTURE=1. Nothing may weaken that gate."
+            exit 1
+          fi
+          echo "ok: dist/brag absent, zero capture pages emitted."

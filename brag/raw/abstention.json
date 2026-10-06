@@ -1,0 +1,11 @@
+{
+  "id": "abstention",
+  "role": "out-of-corpus",
+  "question": "How do I recalibrate the spindle laser interferometer?",
+  "endpoint": "https://br-rough-heart-b5xnq94n-agent.compute.c-7.us-east-2.aws.neon.tech/",
+  "capturedAt": "2026-09-25T15:42:48.787Z",
+  "httpStatus": 200,
+  "elapsedMs": 3846,
+  "rawBytes": 1391,
+  "body": "{\"answer\":\"The evidence provided does not contain information about recalibrating a spindle laser interferometer. \\n\\nThe available evidence discusses troubleshooting mechanical issues such as:\\n- Clearing dust from sensors\\n- Removing tools or chips from tool changer pockets\\n- Wiping sensor faces and maintaining alignment\\n- Addressing mechanical interference in indexing operations\\n\\nNone of these sources cover laser interferometer recalibration procedures. You would need different documentation or resources to answer your question.\",\"evidence\":\"[E-corpus-2026-atc-jam-env-00-narration-44.08559543872252] atc-jam-env-00 — side-b @ 00:44.1-00:50.0: One clean index on the reset. Mechanical interference it was — no parameter to chase.\\n[E-corpus-2026-sensor-trip-env-00-narration-29.07907629502006] sensor-trip-env-00 — head @ 00:29.1-00:37.7: A shop rag clears it. Wipe the face, keep the bracket square, don't knock the alignment.\\n[E-corpus-2026-atc-jam-env-00-narration-24.356484511168674] atc-jam-env-00 — head @ 00:24.4-00:30.6: Check the active pocket first: a loose tool or chip wedged there will stop the index cold.\\n[E-corpus-2026-sensor-trip-env-00-narration-22.867197164567187] sensor-trip-env-00 — head @ 00:22.9-00:29.1: There it is. Dust bridged across the sensor, so the controller reads the axis at its limit.\",\"citations\":{\"verified\":[],\"unverified\":[]}}"
+}
